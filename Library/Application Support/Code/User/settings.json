@@ -1,0 +1,11 @@
+{
+    "workbench.colorTheme": "Default Dark+",
+    "security.workspace.trust.untrustedFiles": "open",
+    "files.autoSave": "afterDelay",
+    "terminal.integrated.localEchoStyle": "dim",
+    "terminal.integrated.fontFamily":  "DejaVu Sans Mono for Powerline",
+    "terminal.integrated.shell.osx": "/bin/zsh",
+    "editor.detectIndentation": false,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+}

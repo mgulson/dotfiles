@@ -1,0 +1,11 @@
+[user]
+	name = Michael Gulson
+	email = mgulson@optoro.com
+[push]
+	default = current
+[color]
+	ui = true
+[color "diff"]
+	whitespace = red reverse
+[pull]
+	rebase = false
