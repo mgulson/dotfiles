@@ -357,3 +357,7 @@ alias kes='k edit secret pgcluster-secret'
 alias kgetpods='k get pods'
 alias opticsw='npx gulp watch -c'
 alias opticsb='npx gulp build -c'
+
+
+## note
+## for personal github use git clone git@github.com-personal:<repository>
