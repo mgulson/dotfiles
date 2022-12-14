@@ -1,0 +1,1 @@
+/Users/mgulson/personal/dotfiles/.zshrc
