@@ -50,7 +50,7 @@ ZSH_THEME="agnoster"
 # COMPLETION_WAITING_DOTS="true"
 
 # Uncomment the following line if you want to disable marking untracked files
-# under VCS as dirty. This makes repository status check for large repositories
+# under VCS as zfty. This makes repository status check for large repositories
 # much, much faster.
 # DISABLE_UNTRACKED_FILES_DIRTY="true"
 
@@ -122,6 +122,7 @@ if [ -f "$FILERUBY" ]; then
   rvm use
 fi
 
+
 ## nvm use ##
 ## RAM="ON" to turn RAM on
 
@@ -134,7 +135,7 @@ load-nvmrc() {
     local nvmrc_node_version=$(nvm version "$(cat "${nvmrc_path}")")
 
     if [ "$nvmrc_node_version" = "N/A" ]; then
-      nvm install
+      nvm use default
     elif [ "$nvmrc_node_version" != "$(nvm version)" ]; then
       nvm use
     fi
@@ -296,8 +297,34 @@ function ebase64 {
 
 ## Git checkout file
 
-function gchf {
+function gchd {
   g checkout develop -- $1
+}
+
+function opticsb {
+  if [[ -z $1 ]]; then
+    echo "needs 1 argument for optics project"
+  else 
+    npx gulp build -c $1
+  fi
+}
+
+function opticsw {
+  if [[ -z $1 ]]; then
+    echo "needs 1 argument for optics project"
+  else 
+    npx gulp build -w $1
+  fi
+}
+
+function dsworkers {
+  workers=( template_removal_worker slot_creation_worker template_priority_update_worker template_creation_worker template_assignment_cleanup_worker container_update_worker container_movement_worker )
+
+  for i in "${workers[@]}"
+  do
+      echo "starting worker $i"
+      bundle exec industrious start $i &
+  done
 }
 
 # The next line updates PATH for the Google Cloud SDK.
@@ -309,9 +336,6 @@ export PATH="/usr/local/opt/mysql@5.7/bin:$PATH"
 
 # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
 # VS Code Terminal
 
@@ -350,14 +374,13 @@ alias rub='rubocop -a'
 alias py='python3'
 alias keditsecret='k edit secret pgcluster-secret'
 alias kes='k edit secret pgcluster-secret'
-
+alias gstash='g stash'
+alias n='node'
 
 
 #This is dangerously close to kgetpod which is a function maybe delete later
 alias kgetpods='k get pods'
-alias opticsw='npx gulp watch -c'
-alias opticsb='npx gulp build -c'
-
+alias killindustrious='pkill -f industrious'
 
 ## note
 ## for personal github use git clone git@github.com-personal:<repository>
