@@ -147,6 +147,15 @@ load-nvmrc() {
 add-zsh-hook chpwd load-nvmrc
 load-nvmrc
 # ZSH - Use this when ZSH is your standard shell
+
+### don't set context if 3rd argument is nocon
+
+## Sets context
+## ex: gkube production-inventory
+
+## does not set context
+## ex: gkube production nocon
+
 function gkube() {
   if [[ -z $2 ]]; then
     export PPORT=8888
@@ -168,12 +177,14 @@ function gkube() {
     command -v yq >/dev/null 2>&1 || { echo >&2 "yq is not installed or not in PATH.  Aborting."; kill -INT $$ }
     yq eval 'with(.clusters[] |select(.name == "gke_optoro-"+env(GCPENV)+"*"); .cluster.proxy-url = "http://localhost:"+env(PPORT))' -i ~/.kube/config
     kubectl config use-context gke_optoro-$GCPENV-service_us-central1_gke-cluster-optoro-$GCPENV-service
+    
     echo "\U2705 Current context $1"
     kubectl config set-context --current --namespace=$1
   fi
 }
 
 alias sz='source ~/.zshrc'
+alias k="kubectl"
 
 #---k8s---
 
@@ -208,9 +219,19 @@ function kr() {
 }
 
 # Usage:
+#   kexecpod web bundle exec rails c
+function kn() {
+  k exec -it $(kgetpod) -- node
+}
+
+# Usage:
 #   kbash web-deployment-688b76c4cc-9lxhk
 #   can use this to get into node apps
 function kbash() {
+  k exec -it $(kgetpod) -- bash
+}
+
+function ksh() {
   k exec -it $(kgetpod) -- sh
 }
 
@@ -288,7 +309,7 @@ function rtest {
 }
 
 function rsp {
-  NO_COVERAGE=true be rspec -fp $1 --no-profile
+  NO_COVERAGE=true bundle exec rspec -fp $1 --no-profile
 }
 
 function ebase64 {
@@ -327,6 +348,19 @@ function dsworkers {
   done
 }
 
+function gtag {
+  git tag -a $1 -m ''
+}
+
+function grebase {
+  if [[ -z $1 ]]; then
+    git rebase -i develop
+  else
+    git rebase -i $1
+  fi
+}
+
+
 # The next line updates PATH for the Google Cloud SDK.
 if [ -f '/Users/mgulson/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/mgulson/google-cloud-sdk/path.zsh.inc'; fi
 
@@ -355,16 +389,15 @@ alias rc='bundle exec rails c'
 alias r='source ~/.zshrc'
 alias pg_start="launchctl load ~/Library/LaunchAgents"
 alias pg_stop="launchctl unload ~/Library/LaunchAgents"
-alias k="kubectl"
 alias gpush='git push'
 alias gpull='git pull'
 alias stubauth='git checkout HARDCODE-WT-3876-auth -- app/controllers/auth_client_controller.rb'
 alias unstubauth='git checkout  -- app/controllers/auth_client_controller.rb'
 alias be='bundle exec'
-alias rubdiff='be rake test:diff'
+alias rubdiff='bundle exec rake test:diff'
 alias auth='INTERNAL_API_KEY=not_real_key_123 rs'
 alias rdb='bundle exec rails db'
-alias rmigrate='be rake db:migrate'
+alias rmigrate='bundle exec rake db:migrate'
 alias oneshot='bundle exec rails r'
 alias gbranchrename='git branch -m'
 alias gbranchd='gbranchdelete'
@@ -376,11 +409,19 @@ alias keditsecret='k edit secret pgcluster-secret'
 alias kes='k edit secret pgcluster-secret'
 alias gstash='g stash'
 alias n='node'
-
+alias ns='npm run start'
 
 #This is dangerously close to kgetpod which is a function maybe delete later
 alias kgetpods='k get pods'
 alias killindustrious='pkill -f industrious'
+alias greset='g reset --hard HEAD~1'
+alias rtvseeds='WAREHOUSE_ID=22 CLOSED_CONTAINERS=true bundle exec rake db:seeds:load\[rtv/create_rtv_units\]'
+alias rubocoptodo='rubocop --auto-gen-config --exclude-limit 10000 '
+alias stagingrelease='bin/make-staging-release'
+
 
 ## note
 ## for personal github use git clone git@github.com-personal:<repository>
+
+
+export HOMEBREW_NO_AUTO_UPDATE=1
