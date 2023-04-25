@@ -360,7 +360,19 @@ function grebase {
   fi
 }
 
+function gbrename {
+  BRANCH=$(git rev-parse --abbrev-ref HEAD)
+  git branch -m $1
+  gbranchdelete "$BRANCH"
+}
 
+function gpull {
+  if [[ -z $1 ]]; then
+    git pull
+  else
+    git pull origin $1
+  fi
+}
 # The next line updates PATH for the Google Cloud SDK.
 if [ -f '/Users/mgulson/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/mgulson/google-cloud-sdk/path.zsh.inc'; fi
 
@@ -390,7 +402,6 @@ alias r='source ~/.zshrc'
 alias pg_start="launchctl load ~/Library/LaunchAgents"
 alias pg_stop="launchctl unload ~/Library/LaunchAgents"
 alias gpush='git push'
-alias gpull='git pull'
 alias stubauth='git checkout HARDCODE-WT-3876-auth -- app/controllers/auth_client_controller.rb'
 alias unstubauth='git checkout  -- app/controllers/auth_client_controller.rb'
 alias be='bundle exec'
@@ -399,7 +410,6 @@ alias auth='INTERNAL_API_KEY=not_real_key_123 rs'
 alias rdb='bundle exec rails db'
 alias rmigrate='bundle exec rake db:migrate'
 alias oneshot='bundle exec rails r'
-alias gbranchrename='git branch -m'
 alias gbranchd='gbranchdelete'
 alias gbranchr='git branch -m'
 alias gclone='git clone'
