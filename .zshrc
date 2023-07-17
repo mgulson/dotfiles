@@ -463,4 +463,3 @@ export HOMEBREW_NO_AUTO_UPDATE=1
 
 alias gdifffile='git diff --name-only'
 alias gdifff='git diff --name-only'
-alias gsup='git branch --set-upstream-to=origin/$(git branch --show-current)'
