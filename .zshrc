@@ -228,7 +228,11 @@ function kn() {
 #   kbash web-deployment-688b76c4cc-9lxhk
 #   can use this to get into node apps
 function kbash() {
-  k exec -it $(kgetpod) -- bash
+  if [[ -z $1 ]]; then
+    k exec -it $(kgetpod) -- bash
+  else
+    k exec -it $1 -- bash
+  fi
 }
 
 function ksh() {
@@ -373,6 +377,19 @@ function gpull {
     git pull origin $1
   fi
 }
+
+function kport {
+  kill $(lsof -t -i:8080)
+}
+
+function invworkers {
+  if [[ -z $1 ]]; then
+    QUEUE=low_priority bundle exec rake resque:work
+  else
+    QUEUE=$1 bundle exec rake resque:work
+  fi
+}
+
 # The next line updates PATH for the Google Cloud SDK.
 if [ -f '/Users/mgulson/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/mgulson/google-cloud-sdk/path.zsh.inc'; fi
 
@@ -425,13 +442,21 @@ alias ns='npm run start'
 alias kgetpods='k get pods'
 alias killindustrious='pkill -f industrious'
 alias greset='g reset --hard HEAD~1'
-alias rtvseeds='WAREHOUSE_ID=22 CLOSED_CONTAINERS=true bundle exec rake db:seeds:load\[rtv/create_rtv_units\]'
+alias rtvseeds='CLIENT_ID=1 WAREHOUSE_ID=22 CLOSED_CONTAINERS=true bundle exec rake db:seeds:load\[rtv/create_rtv_units\]'
 alias rubocoptodo='rubocop --auto-gen-config --exclude-limit 10000 '
 alias stagingrelease='bin/make-staging-release'
-
-
+alias ob='opticsb'
+alias gdiff='git diff'
+alias gd='git diff'
+alias ds='rs -p 3042'
+alias gpf='git push -f'
+alias gpushf='git push -f'
+alias gpusht='git push --tags'
 ## note
 ## for personal github use git clone git@github.com-personal:<repository>
 
 
 export HOMEBREW_NO_AUTO_UPDATE=1
+
+alias gdifffile='git diff --name-only'
+alias gdifff='git diff --name-only'

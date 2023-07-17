@@ -3,9 +3,14 @@
 	email = mgulson@optoro.com
 [push]
 	default = current
+	autoSetupRemote = true
 [color]
 	ui = true
 [color "diff"]
 	whitespace = red reverse
 [pull]
 	rebase = false
+[init]
+	defaultBranch = main
+[rerere]
+	enabled = true
