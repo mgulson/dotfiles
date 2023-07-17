@@ -370,8 +370,11 @@ function gbrename {
   gbranchdelete "$BRANCH"
 }
 
+alias gsup='git branch --set-upstream-to=origin/$(git branch --show-current)'
+
 function gpull {
   if [[ -z $1 ]]; then
+    gsup
     git pull
   else
     git pull origin $1
@@ -460,3 +463,4 @@ export HOMEBREW_NO_AUTO_UPDATE=1
 
 alias gdifffile='git diff --name-only'
 alias gdifff='git diff --name-only'
+alias gsup='git branch --set-upstream-to=origin/$(git branch --show-current)'
