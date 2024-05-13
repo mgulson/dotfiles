@@ -72,6 +72,9 @@ ZSH_THEME="agnoster"
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(git)
 
+
+export ZSH_DISABLE_COMPFIX=true
+
 source $ZSH/oh-my-zsh.sh
 
 # User configuration
@@ -87,7 +90,6 @@ source $ZSH/oh-my-zsh.sh
 # else
 #   export EDITOR='mvim'
 # fi
-
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
 
@@ -101,11 +103,12 @@ source $ZSH/oh-my-zsh.sh
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
 ## git completion
-zstyle ':completion:*:*:git:*' script ~/.zsh/git-completion.bash
-fpath=(~/.zsh $fpath)
+  if type brew &>/dev/null; then
+    FPATH=$(brew --prefix)/share/zsh-completions:$FPATH
 
-autoload -Uz compinit && compinit
-
+    autoload -Uz compinit
+    compinit
+  fi
 
 # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
 export PATH="$PATH:$HOME/.rvm/bin"
@@ -155,33 +158,6 @@ load-nvmrc
 
 ## does not set context
 ## ex: gkube production nocon
-
-function gkube() {
-  if [[ -z $2 ]]; then
-    export PPORT=8888
-    echo "No proxy port specified. Defaulting to proxy port ${PPORT}."
-  else
-    export PPORT=$2
-    echo "Setting proxy port from passed argument."
-  fi
-  if [ -z $1 ]
-  then
-    echo "Need a service namespace argument such as staging-bluq, sandbox-bluq, or production-bluq"
-  else
-    export GCPENV="${1%%-*}"
-    unset HTTPS_PROXY
-    gcloud container clusters get-credentials gke-cluster-optoro-$GCPENV-service --region us-central1 --project optoro-$GCPENV-service
-    ps aux | grep localhost:${PPORT} | grep -v grep | awk '{print $2}' | xargs kill
-    gcloud compute ssh bastion-optoro-$GCPENV-service --project optoro-$GCPENV-service --zone us-central1-a --tunnel-through-iap -- -L ${PPORT}:localhost:8888 -N -q -f
-    # test if yq is installed. Must be yq (https://github.com/mikefarah/yq/) version 4.16.1 or higher
-    command -v yq >/dev/null 2>&1 || { echo >&2 "yq is not installed or not in PATH.  Aborting."; kill -INT $$ }
-    yq eval 'with(.clusters[] |select(.name == "gke_optoro-"+env(GCPENV)+"*"); .cluster.proxy-url = "http://localhost:"+env(PPORT))' -i ~/.kube/config
-    kubectl config use-context gke_optoro-$GCPENV-service_us-central1_gke-cluster-optoro-$GCPENV-service
-    
-    echo "\U2705 Current context $1"
-    kubectl config set-context --current --namespace=$1
-  fi
-}
 
 alias sz='source ~/.zshrc'
 alias k="kubectl"
@@ -240,10 +216,21 @@ function ksh() {
 }
 
 # Usage:
-#   kcpfile web random_stuf.csv
-#   kcpfile db hello.sql
+#   for simplicity use in same directory as local file
+# steps to kcp
+# copy file to tmp directory
+# mv file to ~/
+# run command using sudo user
+#   kcp pod_name file_name 
+#  put it in /tmp folder on local
+
+# ex: sudo kubectl cp TS-22147-unit-ids.csv one-shots-7955754459-sv49d:app/
 function kcp() {
-  k cp $1 "$(kgetpod):/app/$2"
+  if [[ -z $2 ]]; then
+    k cp $1 "$(kgetpod):/app/"
+  else
+    k cp $1 "$2:/"
+  fi
 }
 
 # # Usage:
@@ -352,6 +339,16 @@ function dsworkers {
   done
 }
 
+function wmworkers {
+  workers=( metrics_aggregation_backfill_worker metrics_aggregator_worker metrics_processor_worker metrics_recorder_worker metrics_user_aggregator_worker warehouse_aggregate_worker warehouse_reset_worker weekly_warehouse_aggregate_worker )
+
+  for i in "${workers[@]}"
+  do
+      echo "starting worker $i"
+      bundle exec industrious start $i &
+  done
+}
+
 function gtag {
   git tag -a $1 -m ''
 }
@@ -372,15 +369,6 @@ function gbrename {
 
 alias gsup='git branch --set-upstream-to=origin/$(git branch --show-current)'
 
-function gpull {
-  if [[ -z $1 ]]; then
-    gsup
-    git pull
-  else
-    git pull origin $1
-  fi
-}
-
 function kport {
   kill $(lsof -t -i:8080)
 }
@@ -390,6 +378,20 @@ function invworkers {
     QUEUE=low_priority bundle exec rake resque:work
   else
     QUEUE=$1 bundle exec rake resque:work
+  fi
+}
+
+function restartpostgres {
+  rm /usr/local/var/postgres/postmaster.pid
+  brew services restart postgresql
+}
+
+function gsquash {
+  commit=$(git log -1 --skip 1 --pretty=%B)
+  if [[ -z $1 ]]; then
+    git reset --soft HEAD~2 && git commit --edit -m"$commit"
+  else
+    git reset --soft HEAD~$1 && git commit
   fi
 }
 
@@ -406,6 +408,9 @@ export PATH="/usr/local/opt/mysql@5.7/bin:$PATH"
 # VS Code Terminal
 
 [[ "$TERM_PROGRAM" == "vscode" ]] && . "$(code --locate-shell-integration-path zsh)"
+
+[[ -r "/usr/local/etc/profile.d/bash_completion.sh" ]] && . "/usr/local/etc/profile.d/bash_completion.sh" 
+
 
 
 ## Aliases
@@ -455,6 +460,21 @@ alias ds='rs -p 3042'
 alias gpf='git push -f'
 alias gpushf='git push -f'
 alias gpusht='git push --tags'
+alias catalogs='rs -p 3018'
+alias bi='bundle install'
+alias gclean='git reset --hard'
+alias warehousemetrics='rs -p 3011'
+alias killall='killall5 -9'
+alias rtv='rs -p 3033'
+alias gdiffd='git diff develop'
+alias nd='npm run dev'
+alias gpull='git pull'
+alias nl='npm run lint'
+alias nf='npm run format'
+alias nt='npm run test:unit'
+alias nts='npm run type-check'
+alias nocc='npm run build:dev && npm run preview:dev'
+
 ## note
 ## for personal github use git clone git@github.com-personal:<repository>
 
@@ -463,3 +483,6 @@ export HOMEBREW_NO_AUTO_UPDATE=1
 
 alias gdifffile='git diff --name-only'
 alias gdifff='git diff --name-only'
+
+export HELM_REGISTRY_CONFIG="$HOME/.docker/config.json"
+export HELM_EXPERIMENTAL_OCI=1
